@@ -1,0 +1,120 @@
+
+<body id="myBody" style="background-repeat:repeat; background-size: 80%" background="myBackground01.jpg">
+
+<h1 align=center><font color=red>T4A04 Maze by Fred</font></h1>
+<img id="myImg01" src="Scissors.png" title="myImg01"
+     style="position:absolute; width:100px; height:80px; left:50px; top:190px;">
+
+<img id="myImg02" src="red.png" title="myImg02"
+     style="position:absolute; width:100px; height:8px; left:350px; top:480px;">
+
+<img id="myImg03" src="red.png" title="myImg03"
+     style="position:absolute; width:100px; height:8px; left:700px; top:480px;">
+
+<img id="myImg04" src="yellow.png" title="myImg04"
+     style="position:absolute; width:100px; height:80px; left:900px; top:410px;">
+<div id="floor"
+style="background-color:#654321; position:absolute; width:3500px; height:500px; left:0px; top:485px;"></div>
+<script>
+let x = 50;
+let y = 190;
+const speed = 5;
+const gravity = 1;
+const ground = 400;  
+let ySpeed = 0;
+
+let moveLeft = false;
+let moveRight = false;
+
+const player = document.getElementById("myImg01");
+
+document.addEventListener("keydown", (event) => {
+  switch (event.key.toLowerCase()) {
+    case "w": 
+      if (ySpeed === 0) ySpeed = -15;
+      break;
+    case "a": 
+      moveLeft = true; 
+      break;
+    case "d": 
+      moveRight = true; 
+      break;
+    case "s": 
+      y += speed; 
+      break;
+  }
+});
+
+document.addEventListener("keyup", (event) => {
+  switch (event.key.toLowerCase()) {
+    case "a": moveLeft = false; break;
+    case "d": moveRight = false; break;
+  }
+});
+
+function gameLoop() {
+    // Apply horizontal movement
+    if (moveLeft) x -= speed;
+    if (moveRight) x += speed;
+
+    // Apply gravity
+    ySpeed += gravity;
+    y += ySpeed;
+
+    // Floor collision
+    if (y > ground) {
+        y = ground;
+        ySpeed = 0;
+    }
+
+    // Update player position
+    player.style.left = x + "px";
+    player.style.top = y + "px";
+
+    // Check collisions
+    myCheckHit();
+
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+
+function myHitOther(my1, my2){
+  const el1 = document.getElementById(my1);
+  const el2 = document.getElementById(my2);
+
+  const left1 = el1.offsetLeft;
+  const right1 = left1 + el1.offsetWidth;
+  const top1 = el1.offsetTop;
+  const bottom1 = top1 + el1.offsetHeight;
+
+  const left2 = el2.offsetLeft;
+  const right2 = left2 + el2.offsetWidth;
+  const top2 = el2.offsetTop;
+  const bottom2 = top2 + el2.offsetHeight;
+
+  return (
+    right1 >= left2 &&
+    bottom1 >= top2 &&
+    left1 <= right2 &&
+    top1 <= bottom2
+  );
+}
+
+function myCheckHit(){
+  if ( myHitOther('myImg01','myImg02') ||
+       myHitOther('myImg01','myImg03') ){
+    player.style.left = '50px';
+    player.style.top = '190px';
+    x = 50;
+    y = 190;
+    ySpeed = 0;
+  }
+
+  if ( myHitOther('myImg01','myImg04') ){
+    alert('You Win, now go to the next level');
+    location = 'https://www.google.ca';
+  }
+}
+</script>
+

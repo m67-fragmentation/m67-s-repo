@@ -1,7 +1,7 @@
 
 <body id="myBody" style="background-repeat:repeat; background-size: 80%" background="myBackground01.jpg">
 
-<h1 align=center><font color=red>T4A04 Maze by Fred</font></h1>
+<h1 align=center><font color=red>Level 1</font></h1>
 <img id="myImg01" src="Scissors.png" title="myImg01"
      style="position:absolute; width:100px; height:80px; left:50px; top:190px;">
 
@@ -18,8 +18,8 @@ style="background-color:#654321; position:absolute; width:3500px; height:500px; 
 <script>
 let x = 50;
 let y = 190;
-const speed = 5;
-const gravity = 1;
+const speed = 8;
+const gravity = 0.9;
 const ground = 400;  
 let ySpeed = 0;
 
@@ -112,9 +112,15 @@ function myCheckHit(){
   }
 
   if ( myHitOther('myImg01','myImg04') ){
-    alert('You Win, now go to the next level');
-    location = 'https://www.google.ca';
+    location = 'lvl1.html';
   }
 }
 </script>
+
+
+
+
+
+
+
 

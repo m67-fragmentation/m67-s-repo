@@ -1,240 +1,227 @@
+<!DOCTYPE html>
 <html>
 <head>
     <style>
-        #Player { transform-origin: center; transition: transform 0.1s; }
-        .platform, .moveplatform { position: absolute; box-sizing: border-box; }
-        .platform { background-color: green; }
-        .moveplatform { background-color: lightgreen; }
-        .powerup { 
-            filter: drop-shadow(0 0 10px gold); 
-            animation: hoverEffect 2s ease-in-out infinite; 
+        body { margin: 0; overflow: hidden; background-color: #87CEEB }
+        #Player { 
+            position: absolute; 
+            z-index: 10;
+            transition: transform 0.1s
         }
-        @keyframes hoverEffect {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-5px); }
+        .paper-platform {
+            position: absolute;
+            height: 15px; 
+            background-image: url('paper.png');
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+            transition: opacity 0.3s, transform 0.3s
         }
-        .obstacle { filter: sepia(1) saturate(5) hue-rotate(-50deg); }
+        .shredded {
+            transform: scale(0) rotate(20deg);
+            opacity: 0;
+            pointer-events: none
+        }
+        #DeathWall {
+            position: absolute;
+            width: 80px;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,0,0,0.8), rgba(255,0,0,0));
+            border-left: 8px dashed yellow;
+            left: -200px;
+            top: 0;
+            z-index: 15;
+            display: none
+        }
+        .cannon {
+            position: fixed; 
+            width: 60px;
+            height: 40px;
+            left: 0px;
+            border-radius: 0 10px 10px 0;
+            z-index: 20
+        }
+        #ScissorCannon { background-color: #333 }
+        #RockCannon { background-color: #a00 }
+        .projectile {
+            position: absolute;
+            width: 50px;
+            height: 40px;
+            z-index: 4
+        }
+        #GameWorld {
+            position: relative;
+            width: 4500px;
+            height: 100vh;
+            transition: transform 0.1s ease-out
+        }
     </style>
 </head>
-
-<body id="myBody" style="background-repeat:repeat; background-size: 80%" background="sky.png">
-
-    <h1 align="center"><font color="red">Level 2</font></h1>
-
-    <img id="Player" src="Scissors.png" style="position:absolute; width:100px; height:80px; left:0px; top:140px;">
-
-    <div class="moveplatform" id="myMover" style="width:90px; height:10px; left:0px; top:220px; color: green; display: flex; align-items: center; justify-content: center; line-height: 10px; font-size: 10px;">ccc</div>
-    <div class="moveplatform" id="myMover2" style="width:90px; height:10px; left:1200px; top:650px;"></div>
-    <div class="moveplatform" id="myMover3" style="width:90px; height:10px; left:800px; top:650px;"></div>
-    <div class="platform" style="width:200px; height:20px; left:1290px; top:400px;"></div> 
-    <div class="platform" style="width:200px; height:20px; left:1750px; top:360px;"></div>   
-    <img id="myRock01" class="powerup" src="rock.png" style="position:absolute; width:40px; height:40px; left:0px; top:170px;">
-    <img id="Paper02" class="obstacle" src="paper.png" style="position:absolute; width:50px; height:70px; left:420px; top:150px;">
-    <img id="Paper03" class="obstacle" src="paper.png" style="position:absolute; width:50px; height:70px; left:820px; top:150px;">
-    <img id="Paper04" class="obstacle" src="paper.png" style="position:absolute; width:50px; height:70px; left:1440px; top:330px;">
-    <img id="Paper05" class="obstacle" src="paper.png" style="position:absolute; width:50px; height:70px; left:1440px; top:260px;">
-    
-    <img id="Scissors02" class="powerup" src="Scissors.png" style="position:absolute; width:40px; height:40px; left:1000px; top:600px;">
-    <img id="Scissors03" class="obstacle" src="Scissors.png" style="position:absolute; width:100px; height:80px; left:1300px; top:320px;">
-    <img id="myWin01" src="yellow.png" style="position:absolute; width:50px; height:80px; left:1850px; top:280px;">
-
+<body id="myBody" background="sky.png" style="background-repeat:repeat; background-size: 80%">
+    <h1 align="center" style="position: fixed; width: 100%; pointer-events: none; font-family: sans-serif; z-index: 100;">
+        <font color="red">Level 4</font>
+    </h1>
+    <div id="ScissorCannon" class="cannon" style="top: 200px"></div>
+    <div id="RockCannon" class="cannon" style="top: 400px"></div>
+    <div id="GameWorld">
+        <div id="DeathWall"></div>
+        <img id="Player" src="paper.png" style="position:absolute; width:100px; height:80px; left:100px; top:200px">
+        <div id="PlatformContainer">
+            <div class="paper-platform" style="width:250px; left:50px; top:450px"></div>
+            <div class="paper-platform" style="width:150px; left:400px; top:400px"></div>
+            <div class="paper-platform" style="width:150px; left:650px; top:320px"></div>
+            <div class="paper-platform" style="width:200px; left:900px; top:450px"></div>
+            <div class="paper-platform" style="width:150px; left:1200px; top:350px"></div>
+            <div class="paper-platform" style="width:150px; left:1450px; top:250px"></div>
+            <div class="paper-platform" style="width:200px; left:1700px; top:400px"></div>
+            <div class="paper-platform" style="width:150px; left:2000px; top:320px"></div>
+            <div class="paper-platform" style="width:180px; left:2250px; top:450px"></div>
+            <div class="paper-platform" style="width:150px; left:2550px; top:350px"></div>
+            <div class="paper-platform" style="width:150px; left:2850px; top:250px"></div>
+            <div class="paper-platform" style="width:200px; left:3150px; top:400px"></div>
+            <div class="paper-platform" style="width:150px; left:3450px; top:300px"></div>
+            <div class="paper-platform" style="width:200px; left:3750px; top:450px"></div>
+            <div class="paper-platform" style="width:400px; left:4050px; top:350px"></div>
+        </div>
+        <img id="myWin01" src="yellow.png" style="position:absolute; width:60px; height:100px; left:4350px; top:250px">
+    </div>
 <script>
-    const config = {
-        gravity: 0.5,
-        jumpForce: -11,
-        acceleration: 0.8,
-        airAcceleration: 0.8,
-        maxSpeed: 8,
-        drag: 0.9
-    };
+    const config = { 
+        gravity: 0.55, 
+        jumpForce: -14, 
+        acceleration: 0.9, 
+        drag: 0.88, 
+        deathY: 850,
+        deathWallSpeed: 3.8 
+    }
 
-    let player, myVelocityX = 0, myVelocityY = 1, isGrounded = true;
-    let playerState = 'scissors';
-    let plat1Dir = 1, plat2Dir = 1, plat3Dir = 1; 
-    let activePlatform = null; 
-    const keysDown = {};
+    let player, gameWorld, deathWall, myVelocityX = 0, myVelocityY = 1, isGrounded = false
+    let playerState = 'paper', projectiles = [], cameraX = 0
+    let deathWallActive = false, wallX = -200, deathWallTimer
+    const keysDown = {}
 
     window.onload = function() {
-        player = document.getElementById('Player');
-        setHitboxes('scissors');
-        window.addEventListener('keydown', e => keysDown[e.key.toLowerCase()] = true);
-        window.addEventListener('keyup', e => keysDown[e.key.toLowerCase()] = false);
-        setInterval(gameLoop, 20);
-    };
+        player = document.getElementById('Player')
+        gameWorld = document.getElementById('GameWorld')
+        deathWall = document.getElementById('DeathWall')
+        updateState('paper')
+        
+        window.addEventListener('keydown', e => keysDown[e.key.toLowerCase()] = true)
+        window.addEventListener('keyup', e => keysDown[e.key.toLowerCase()] = false)
+        
+        setInterval(gameLoop, 20)
+        setInterval(() => fire('Scissors.png', 'scissor-proj'), 1500)
+        setInterval(() => fire('rock.png', 'rock-proj'), 2000) 
 
-    function setHitboxes(state) {
-        if (state === 'scissors') {
-            player.hitboxes = [
-                { x: 70, y: 10, w: 20, h: 20 }, { x: 50, y: 25, w: 20, h: 20 },
-                { x: 30, y: 40, w: 20, h: 20 }, { x: 5, y: 55, w: 25, h: 27 }
-            ];
+        startDeathWallTimer()
+    }
+
+    function startDeathWallTimer() {
+        if (deathWallTimer) clearTimeout(deathWallTimer)
+        deathWallTimer = setTimeout(() => {
+            deathWallActive = true
+            deathWall.style.display = 'block'
+        }, 1000)
+    }
+
+    function updateState(state) {
+        playerState = state
+        player.src = state === 'scissors' ? 'Scissors.png' : (state === 'rock' ? 'rock.png' : 'paper.png')
+        if (state === 'rock') {
+            player.style.width = '80px'; player.style.height = '80px'
         } else {
-            player.hitboxes = [{ x: 0, y: 0, w: 100, h: 80 }];
+            player.style.width = '100px'; player.style.height = '80px'
         }
     }
 
-    function getHitboxes(id) {
-        const el = document.getElementById(id);
-        if (!el || el.style.display === 'none') return [];
-        const r = el.getBoundingClientRect();
-        if (id === 'Player' && el.hitboxes) {
-            const isFlipped = el.style.transform.includes('scaleX(-1)');
-            return el.hitboxes.map(box => {
-                let posX = isFlipped ? (100 - box.x - box.w) : box.x;
-                return {
-                    left: r.left + posX, top: r.top + box.y,
-                    right: r.left + posX + box.w, bottom: r.top + box.y + box.h,
-                    width: box.w, localBottom: box.y + box.h
-                };
-            });
-        }
-        return [r]; 
-    }
-
-    function isTouching(id1, id2) {
-        const boxes1 = getHitboxes(id1), boxes2 = getHitboxes(id2);
-        for (let r1 of boxes1) for (let r2 of boxes2)
-            if (r1.right > r2.left && r1.bottom > r2.top && r1.left < r2.right && r1.top < r2.bottom) return true;
-        return false;
-    }
-
-    // NEW: Function to handle GIF logic correctly
-    function triggerExplosion(element) {
-        if (element.dataset.isExploding === "true") return;
-        element.dataset.isExploding = "true";
-        // Adding timestamp forces the GIF to restart from frame 0
-        element.src = 'explode.gif?t=' + new Date().getTime();
-        setTimeout(() => {
-            element.style.display = 'none';
-            element.dataset.isExploding = "false";
-        }, 800);
+    function fire(img, type) {
+        if (parseFloat(player.style.left) < 300) return
+        const cannon = (type === 'scissor-proj') ? document.getElementById('ScissorCannon') : document.getElementById('RockCannon')
+        const proj = document.createElement('img')
+        proj.src = img
+        proj.className = 'projectile'
+        proj.style.left = (Math.abs(cameraX) + 60) + 'px'
+        proj.style.top = cannon.style.top
+        gameWorld.appendChild(proj)
+        projectiles.push({el: proj, type: type})
     }
 
     function gameLoop() {
-        // --- 1. PLATFORM MOVEMENTS ---
-        const plat1 = document.getElementById('myMover');
-        let oldP1L = parseFloat(plat1.style.left) || 0;
-        let newP1L = oldP1L + (3.0 * plat1Dir);
-        plat1.style.left = newP1L + 'px';
-        if (newP1L > 1100) plat1Dir = -1; else if (newP1L < 0) plat1Dir = 1;
-        let p1DeltaX = newP1L - oldP1L;
-
-        const plat2 = document.getElementById('myMover2');
-        let oldP2T = parseFloat(plat2.style.top) || 0;
-        let newP2T = oldP2T + (2.5 * plat2Dir);
-        plat2.style.top = newP2T + 'px';
-        if (newP2T > 650) plat2Dir = -1; else if (newP2T < 400) plat2Dir = 1;
-        let p2DeltaY = newP2T - oldP2T;
-
-        const plat3 = document.getElementById('myMover3');
-        let oldP3L = parseFloat(plat3.style.left) || 0;
-        let newP3L = oldP3L + (3.0 * plat3Dir);
-        plat3.style.left = newP3L + 'px';
-        if (newP3L > 1100) plat3Dir = -1; else if (newP3L < 500) plat3Dir = 1;
-        let p3DeltaX = newP3L - oldP3L;
-
-        // --- 2. APPLY STICKY MOTION ---
-        if (activePlatform) {
-            let pL = parseFloat(player.style.left) || 0;
-            let pT = parseFloat(player.style.top) || 0;
-            if (activePlatform.id === 'myMover') player.style.left = (pL + p1DeltaX) + 'px';
-            if (activePlatform.id === 'myMover2') player.style.top = (pT + p2DeltaY) + 'px';
-            if (activePlatform.id === 'myMover3') player.style.left = (pL + p3DeltaX) + 'px';
+        if (deathWallActive) {
+            wallX += config.deathWallSpeed
+            deathWall.style.left = wallX + 'px'
+            if (parseFloat(player.style.left) < wallX + 40) reset() 
         }
 
-        // --- 3. PHYSICS ---
-        myVelocityX *= config.drag;
-        const accel = isGrounded ? config.acceleration : config.airAcceleration;
-        if (keysDown['a']) { myVelocityX -= accel; player.style.transform = 'scaleX(1)'; } 
-        if (keysDown['d']) { myVelocityX += accel; player.style.transform = 'scaleX(-1)'; }
-        if (Math.abs(myVelocityX) > config.maxSpeed) myVelocityX = (myVelocityX > 0 ? 1 : -1) * config.maxSpeed;
+        document.getElementById('ScissorCannon').style.top = (300 + Math.sin(Date.now()/800) * 200) + 'px'
+        document.getElementById('RockCannon').style.top = (300 + Math.cos(Date.now()/1000) * 200) + 'px'
+
+        for (let i = projectiles.length - 1; i >= 0; i--) {
+            let p = projectiles[i]
+            let pLeft = parseFloat(p.el.style.left)
+            p.el.style.left = (pLeft + 10) + 'px'
+            let r1 = player.getBoundingClientRect()
+            let r2 = p.el.getBoundingClientRect()
+            if (!(r1.right < r2.left + 10 || r1.left > r2.right - 10 || r1.bottom < r2.top + 10 || r1.top > r2.bottom - 10)) {
+                updateState(p.type === 'rock-proj' ? 'rock' : 'scissors')
+                p.el.remove(); projectiles.splice(i, 1)
+            } else if (pLeft > Math.abs(cameraX) + window.innerWidth + 100) {
+                p.el.remove(); projectiles.splice(i, 1)
+            }
+        }
+
+        myVelocityX *= config.drag
+        if (keysDown['a']) { myVelocityX -= config.acceleration; player.style.transform = 'scaleX(1)' } 
+        if (keysDown['d']) { myVelocityX += config.acceleration; player.style.transform = 'scaleX(-1)' }
         
-        player.style.left = (parseFloat(player.style.left) || 0) + myVelocityX + 'px';
-        myVelocityY += config.gravity;
-        player.style.top = (parseFloat(player.style.top) || 0) + myVelocityY + "px";
+        let newX = (parseFloat(player.style.left) || 100) + myVelocityX
+        player.style.left = Math.max(0, newX) + 'px'
 
-        // --- 4. COLLISIONS ---
-        let onPlatform = false;
-        const playerBoxes = getHitboxes('Player');
-        const allPlatforms = document.querySelectorAll('.platform, .moveplatform');
+        cameraX += (Math.min(0, -(newX - window.innerWidth/3)) - cameraX) * 0.1 
+        gameWorld.style.transform = `translateX(${cameraX}px)`
 
-        for (let plat of allPlatforms) {
-            const pRect = plat.getBoundingClientRect();
-            for (let box of playerBoxes) {
-                if (myVelocityY >= 0 && box.right > pRect.left && box.left < pRect.right &&
-                    box.bottom >= pRect.top && box.top < pRect.top) {
-                    player.style.top = (parseFloat(plat.style.top) - box.localBottom) + 'px';
-                    myVelocityY = 0; 
-                    onPlatform = true; 
-                    activePlatform = plat;
-                    break;
+        myVelocityY += config.gravity
+        let currTop = parseFloat(player.style.top) || 200
+        let onPlatform = false
+        const b = player.getBoundingClientRect()
+
+        document.querySelectorAll('.paper-platform:not(.shredded)').forEach(plat => {
+            const r = plat.getBoundingClientRect()
+            if (b.right > r.left + 5 && b.left < r.right - 5 && b.bottom <= r.top + 20 && b.bottom + myVelocityY >= r.top) {
+                if (playerState === 'rock') { reset(); return }
+                if (playerState === 'scissors') { plat.classList.add('shredded'); return }
+                if (myVelocityY >= 0) {
+                    player.style.top = (currTop + (r.top - b.bottom)) + 'px'
+                    myVelocityY = 0
+                    onPlatform = true
                 }
             }
-            if (onPlatform) break;
+        })
+
+        if (!onPlatform) player.style.top = (currTop + myVelocityY) + "px"
+        isGrounded = onPlatform
+        if (keysDown['w'] && isGrounded) { myVelocityY = config.jumpForce; isGrounded = false }
+
+        let winRect = document.getElementById('myWin01').getBoundingClientRect()
+        if (!(b.right < winRect.left || b.left > winRect.right || b.bottom < winRect.top || b.top > winRect.bottom)) {
+            window.location.href = 'gameindex.html'
         }
-
-        if (!onPlatform) { isGrounded = false; activePlatform = null; } 
-        else {
-            isGrounded = true;
-            if (keysDown['w']) { myVelocityY = config.jumpForce; isGrounded = false; activePlatform = null; }
-        }
-
-        // --- 5. GAME LOGIC ---
-        if (isTouching('Player', 'myWin01')) { window.location.href = 'gameindex.html'; }
-
-        if (isTouching('Player', 'myRock01') && document.getElementById('myRock01').style.display !== 'none') {
-            playerState = 'rock'; player.src = 'rock.png'; setHitboxes('rock');
-            document.getElementById('myRock01').style.display = 'none';
-        }
-
-        if (isTouching('Player', 'Scissors02') && document.getElementById('Scissors02').style.display !== 'none') {
-            playerState = 'scissors'; player.src = 'Scissors.png'; setHitboxes('scissors');
-            document.getElementById('Scissors02').style.display = 'none';
-        }
-
-        ['Paper02', 'Paper03', 'Paper04', 'Paper05'].forEach(id => {
-            const paper = document.getElementById(id);
-            if (isTouching('Player', id) && paper.style.display !== 'none') {
-                if (playerState === 'rock') reset();
-                else if (playerState === 'scissors') {
-                    triggerExplosion(paper);
-                }
-            }
-        });
-
-        if (isTouching('Player', 'Scissors03') && playerState === 'rock') {
-            const sWall = document.getElementById('Scissors03');
-            if (sWall.style.display !== 'none') {
-                triggerExplosion(sWall);
-            }
-        }
-
-        if (parseFloat(player.style.top) > 900) reset();
+        if (parseFloat(player.style.top) > config.deathY) reset()
     }
 
     function reset() {
-        player.style.left = '0px'; player.style.top = '140px';
-        myVelocityX = 0; myVelocityY = 0;
-        playerState = 'scissors'; player.src = 'Scissors.png'; setHitboxes('scissors');
-        activePlatform = null;
-        plat1Dir = 1; plat2Dir = 1; plat3Dir = 1;
-        
-        document.getElementById('myMover').style.left = '0px';
-        document.getElementById('myMover2').style.top = '650px';
-        document.getElementById('myMover3').style.left = '800px';
-
-        ['Paper02', 'Paper03', 'Paper04', 'Paper05', 'Scissors02', 'Scissors03', 'myRock01'].forEach(id => {
-            const el = document.getElementById(id);
-            if(el) {
-                el.style.display = 'block';
-                el.dataset.isExploding = "false";
-                // Reset to original image (cache bust here too just in case)
-                if (id.includes('Paper')) el.src = 'paper.png';
-                if (id.includes('Scissors')) el.src = 'Scissors.png';
-                if (id === 'myRock01') el.src = 'rock.png';
-            }
-        });
+        wallX = -200
+        deathWallActive = false
+        deathWall.style.display = 'none'
+        startDeathWallTimer()
+        player.style.left = '100px'
+        player.style.top = '200px'
+        myVelocityX = 0
+        myVelocityY = 0
+        updateState('paper')
+        document.querySelectorAll('.shredded').forEach(p => p.classList.remove('shredded'))
+        projectiles.forEach(p => p.el.remove())
+        projectiles = []
     }
 </script>
-</body> 
+</body>
 </html>

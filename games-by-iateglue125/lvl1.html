@@ -1,0 +1,241 @@
+<html>
+<head>
+    <style>
+        #Player { transform-origin: center; transition: transform 0.1s; }
+        #myGround04 { background-color: #836539;}
+        
+        .platform {
+            background-color: green;
+            position: absolute;
+            box-sizing: border-box;
+        }
+
+        .powerup {
+            filter: drop-shadow(0 0 10px gold);
+            cursor: pointer;
+            animation: hoverEffect 2s ease-in-out infinite;
+        }
+
+        @keyframes hoverEffect {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+            100% { transform: translateY(0px); }
+        }
+
+        #Scissors03 {
+            filter: sepia(1) saturate(5) hue-rotate(-50deg);
+        }
+
+        .hitbox-visual {
+            border: 1px none rgba(0, 0, 255, 0.4); 
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            box-sizing: border-box;
+        }
+    </style>
+</head>
+
+<body id="myBody" style="background-repeat:repeat; background-size: 80%" background="sky.png">
+
+    <h1 align="center"><font color="red">Level 2</font></h1>
+
+    <img id="Player" src="Scissors.png" style="position:absolute; width:100px; height:80px; left:0px; top:300px;">
+
+    <div class="platform" style="width:180px; height:10px; left:0px; top:420px;"></div>
+    <div class="platform" style="width:90px; height:10px; left:260px; top:360px;"></div>
+    <div class="platform" id="lowest-platform" style="width:90px; height:10px; left:260px; top:510px;"></div>
+    <div class="platform" style="width:70px; height:10px; left:420px; top:300px;"></div>
+    <div class="platform" style="width:80px; height:10px; left:540px; top:260px;"></div>
+    <div class="platform" style="width:80px; height:10px; left:750px; top:220px;"></div>
+    <div class="platform" style="width:120px; height:10px; left:900px; top:300px;"></div>
+    <div class="platform" style="width:140px; height:10px; left:1080px; top:360px;"></div>
+
+    <img id="myRock01" class="powerup" src="rock.png" style="position:absolute; width:40px; height:40px; left:285px; top:470px;">
+    <img id="Paper02" class="obstacle" src="paper.png" style="position:absolute; width:50px; height:70px; left:420px; top:230px;">
+    <img id="Scissors03" class="obstacle" src="Scissors.png" style="position:absolute; width:100px; height:80px; left:740px; top:140px;">
+    <img id="myWin01" src="yellow.png" style="position:absolute; width:50px; height:80px; left:1120px; top:280px;">
+    <img id="myDeathBox03" src="red.png" style="position:absolute; width:100%; height:10px; left:0px; top:680px;">
+
+<script>
+    const config = {
+        gravity: 0.5,
+        jumpForce: -10,
+        acceleration: 0.6,
+        airAcceleration: 0.6,
+        maxSpeed: 8,
+        drag: 0.9,
+        bounce: 7 // Strength of the knockback
+    };
+
+    let player, myVelocityX = 0, myVelocityY = 1, isGrounded = true;
+    let playerState = 'scissors', paperExploded = false, scissorsExploded = false; 
+    const keysDown = {};
+
+    window.onload = function() {
+        player = document.getElementById('Player');
+        setHitboxes('scissors');
+        window.addEventListener('keydown', e => keysDown[e.key.toLowerCase()] = true);
+        window.addEventListener('keyup', e => keysDown[e.key.toLowerCase()] = false);
+        setInterval(gameLoop, 20);
+    };
+
+    function setHitboxes(state) {
+        if (state === 'scissors') {
+            player.hitboxes = [
+                { x: 70, y: 10, w: 20, h: 20 }, { x: 50, y: 25, w: 20, h: 20 },
+                { x: 30, y: 40, w: 20, h: 20 }, { x: 5, y: 55, w: 25, h: 27 }
+            ];
+        } else {
+            player.hitboxes = [{ x: 0, y: 0, w: 100, h: 80 }];
+        }
+    }
+
+    function getHitboxes(id) {
+        const el = document.getElementById(id);
+        if (!el) return [];
+        const r = el.getBoundingClientRect();
+        if (id === 'Player' && el.hitboxes) {
+            const isFlipped = el.style.transform.includes('scaleX(-1)');
+            const imgWidth = 100;
+            return el.hitboxes.map(box => {
+                let posX = isFlipped ? (imgWidth - box.x - box.w) : box.x;
+                return {
+                    left: r.left + posX, top: r.top + box.y,
+                    right: r.left + posX + box.w, bottom: r.top + box.y + box.h,
+                    width: box.w, localBottom: box.y + box.h, localLeft: posX
+                };
+            });
+        }
+        return [r]; 
+    }
+
+    function isTouching(id1, id2) {
+        const boxes1 = getHitboxes(id1), boxes2 = getHitboxes(id2);
+        for (let r1 of boxes1) for (let r2 of boxes2)
+            if (r1.right > r2.left && r1.bottom > r2.top && r1.left < r2.right && r1.top < r2.bottom) return true;
+        return false;
+    }
+
+    function handlePhysics() {
+        myVelocityX *= config.drag;
+        const accel = isGrounded ? config.acceleration : config.airAcceleration;
+        if (keysDown['a']) { myVelocityX -= accel; player.style.transform = 'scaleX(1)'; } 
+        if (keysDown['d']) { myVelocityX += accel; player.style.transform = 'scaleX(-1)'; }
+        if (Math.abs(myVelocityX) > config.maxSpeed) myVelocityX = (myVelocityX > 0) ? config.maxSpeed : -config.maxSpeed;
+        
+        let oldLeft = parseFloat(player.style.left) || 0;
+        player.style.left = (oldLeft + myVelocityX) + 'px';
+
+        // --- BOUNCE FEATURE ---
+        // If Scissors touches Scissors obstacle horizontally
+        if (playerState === 'scissors' && !scissorsExploded && isTouching('Player', 'Scissors03')) {
+            player.style.left = oldLeft + 'px'; // Move back to prevent clipping
+            myVelocityX = (myVelocityX > 0) ? -config.bounce : config.bounce; // Reverse momentum
+        }
+
+        if (keysDown['w'] && isGrounded) { myVelocityY = config.jumpForce; isGrounded = false; }
+    }
+
+    function checkCollisions() {
+        let onPlatform = false;
+        const playerBoxes = getHitboxes('Player');
+        const allPlatforms = document.querySelectorAll('.platform');
+
+        myVelocityY += config.gravity;
+        let oldTop = parseFloat(player.style.top) || 0;
+        let potentialTop = oldTop + myVelocityY;
+
+        if (myVelocityY >= 0) { 
+            for (let plat of allPlatforms) {
+                const pRect = plat.getBoundingClientRect();
+                for (let box of playerBoxes) {
+                    if (box.right > pRect.left && box.left < pRect.right &&
+                        box.bottom <= pRect.top + 5 && (box.bottom + myVelocityY) >= pRect.top) {
+                        player.style.top = (parseInt(plat.style.top) - box.localBottom) + 'px';
+                        myVelocityY = 0; 
+                        onPlatform = true; 
+                        break; 
+                    }
+                }
+                if (onPlatform) break;
+            }
+        }
+
+        // Scissors obstacle top collision
+        if (!scissorsExploded && playerState !== 'rock' && !onPlatform) {
+            const sItem = document.getElementById('Scissors03');
+            const sRect = sItem.getBoundingClientRect();
+            for (let box of playerBoxes) {
+                if (myVelocityY >= 0 && box.right > sRect.left && box.left < sRect.right &&
+                    box.bottom <= sRect.top + 5 && (box.bottom + myVelocityY) >= sRect.top) {
+                    player.style.top = (parseInt(sItem.style.top) - box.localBottom) + 'px';
+                    myVelocityY = 0; 
+                    onPlatform = true;
+                }
+            }
+        }
+
+        if (!onPlatform) {
+            player.style.top = potentialTop + "px";
+            // Check if jumping hit the Scissors from below
+            if (playerState === 'scissors' && !scissorsExploded && isTouching('Player', 'Scissors03')) {
+                player.style.top = oldTop + 'px';
+                myVelocityY = 1; // Knock down
+            }
+        }
+        
+        isGrounded = onPlatform;
+        if (parseFloat(player.style.top) > 800) reset();
+    }
+
+    function gameLoop() {
+        handlePhysics();
+        checkCollisions();
+        
+        if (isTouching('Player', 'myDeathBox03')) reset();
+        if (isTouching('Player', 'myWin01')) {
+            location = 'lvl2.html'; 
+        }
+
+        if (isTouching('Player', 'myRock01') && document.getElementById('myRock01').style.display !== 'none') {
+            playerState = 'rock';
+            player.src = 'rock.png';
+            setHitboxes('rock');
+            document.getElementById('myRock01').style.display = 'none';
+        }
+
+        if (isTouching('Player', 'Paper02')) {	
+            if (playerState === 'rock') reset(); 
+            else if (playerState === 'scissors' && !paperExploded) {
+                const paper = document.getElementById('Paper02');
+                paperExploded = true;
+                paper.src = 'explode.gif?t=' + new Date().getTime(); 
+                setTimeout(() => { paper.style.opacity = '0'; paper.style.top = '2000px'; }, 1000);
+            }
+        }
+
+        if (isTouching('Player', 'Scissors03') && playerState === 'rock' && !scissorsExploded) {
+            const sItem = document.getElementById('Scissors03');
+            scissorsExploded = true;
+            sItem.src = 'explode.gif?t=' + new Date().getTime();
+            setTimeout(() => { sItem.style.opacity = '0'; sItem.style.top = '2000px'; }, 1000);
+        }
+    }
+
+    function reset() {
+        player.style.left = '0px'; player.style.top = '300px';
+        myVelocityX = 0; myVelocityY = 0;
+        playerState = 'scissors'; player.src = 'Scissors.png'; setHitboxes('scissors');
+        
+        const paper = document.getElementById('Paper02');
+        paper.src = 'paper.png'; paper.style.opacity = '1'; paper.style.top = '230px'; paperExploded = false;
+
+        const sItem = document.getElementById('Scissors03');
+        sItem.src = 'Scissors.png'; sItem.style.opacity = '1'; sItem.style.top = '140px'; scissorsExploded = false;
+
+        document.getElementById('myRock01').style.display = 'block';
+    }
+</script>
+</body>
+</html>
